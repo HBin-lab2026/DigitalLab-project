@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hiring Tracker</title>
+<style>
+  :root{
+    --ink:#1d1035;
+    --paper:#fdf6ec;
+    --hot:#ff3d7f;
+    --sun:#ffc233;
+    --teal:#00b8a9;
+    --violet:#6c4cff;
+    --card:#ffffff;
+    --muted:#6b5e8a;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',system-ui,Arial,sans-serif}
+  body{background:var(--paper);color:var(--ink);padding:28px 20px 60px}
+  .wrap{max-width:1100px;margin:0 auto}
+
+  header.hero{background:linear-gradient(120deg,var(--violet),var(--hot) 60%,var(--sun));color:#fff;border-radius:22px;padding:30px 32px;margin-bottom:34px;box-shadow:0 10px 30px rgba(108,76,255,.25)}
+  header.hero h1{font-size:2.1rem;letter-spacing:.5px}
+  header.hero p{margin-top:6px;font-weight:500;opacity:.95}
+  .badge{display:inline-block;background:rgba(255,255,255,.22);padding:4px 12px;border-radius:99px;font-size:.8rem;font-weight:700;margin-top:12px}
+
+  section{margin-bottom:44px}
+  h2{font-size:1.45rem;display:flex;align-items:center;gap:10px;margin-bottom:6px}
+  h2 .dot{width:16px;height:16px;border-radius:5px;display:inline-block}
+  .dot-pipe{background:var(--hot)} .dot-screen{background:var(--teal)} .dot-match{background:var(--violet)}
+  .sub{color:var(--muted);margin-bottom:18px;font-size:.95rem}
+
+  .card{background:var(--card);border-radius:16px;padding:16px 18px;margin-bottom:14px;box-shadow:0 4px 14px rgba(29,16,53,.08);border-left:8px solid var(--sun)}
+
+  /* pipeline */
+  .cand-top{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px}
+  .cand-name{font-size:1.15rem;font-weight:800}
+  .match-pill{background:var(--violet);color:#fff;font-weight:800;padding:4px 12px;border-radius:99px;font-size:.9rem;white-space:nowrap}
+  .role{color:var(--muted);font-size:.9rem;margin-top:2px}
+
+  .stages{display:flex;gap:6px;margin:14px 0 12px;flex-wrap:wrap}
+  .stage{flex:1;min-width:70px;text-align:center;font-size:.72rem;font-weight:700;padding:8px 4px;border-radius:10px;background:#f1ecfa;color:var(--muted);border:2px dashed #d9d2ef;text-transform:uppercase;letter-spacing:.4px}
+  .stage.done{background:var(--teal);color:#fff;border:2px solid var(--teal)}
+  .stage.now{background:var(--hot);color:#fff;border:2px solid var(--hot);box-shadow:0 4px 12px rgba(255,61,127,.35)}
+
+  .decided{display:inline-block;font-weight:800;padding:5px 14px;border-radius:10px;font-size:.85rem}
+  .decided.shortlisted{background:#fff3c4;color:#8a6d00}
+  .decided.rejected{background:#ffe1e8;color:#b3003c}
+  .decided.offered{background:#d8f7e8;color:#046d4b}
+
+  .actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  button{border:none;cursor:pointer;font-weight:800;border-radius:10px;padding:9px 16px;font-size:.88rem;transition:transform .12s}
+  button:hover{transform:translateY(-2px)}
+  button:disabled{opacity:.45;cursor:not-allowed;transform:none}
+  .btn-fwd{background:var(--hot);color:#fff}
+  .btn-fwd:disabled{background:#c9bede;color:#fff}
+  select{padding:9px 12px;border-radius:10px;border:2px solid var(--ink);font-weight:700;font-size:.88rem;background:#fff;cursor:pointer}
+  .btn-decide{background:var(--ink);color:#fff}
+
+  /* screening */
+  .screen-grid{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+  .chip{font-size:.8rem;font-weight:800;padding:6px 12px;border-radius:99px}
+  .chip.screen-pending{background:#fff3c4;color:#8a6d00}
+  .chip.screen-passed{background:#d8f7e8;color:#046d4b}
+  .chip.screen-failed{background:#ffe1e8;color:#b3003c}
+  .chip.int-scheduled{background:#e4e0ff;color:#3a2bb0}
+  .chip.int-progress{background:#ffe9d6;color:#a35400}
+  .chip.int-done{background:#d8f7e8;color:#046d4b}
+  .note{background:#fdf6ec;border-radius:10px;padding:10px 14px;margin-top:12px;font-size:.92rem;color:var(--muted);font-style:italic}
+  .btn-ghost{background:#f1ecfa;color:var(--violet)}
+  .btn-ghost2{background:#e0f7f4;color:#046d4b}
+
+  /* match */
+  .bar-row{margin-top:10px}
+  .bar-label{display:flex;justify-content:space-between;font-size:.82rem;font-weight:700;margin-bottom:4px}
+  .bar{height:12px;border-radius:99px;background:#f1ecfa;overflow:hidden}
+  .bar>span{display:block;height:100%;border-radius:99px;transition:width .4s}
+  .skills>span{background:var(--teal)}
+  .exp>span{background:var(--sun)}
+  .verdict{margin-top:12px;font-weight:800;font-size:.92rem}
+  .verdict strong{padding:2px 10px;border-radius:8px}
+  .v-strong{background:#d8f7e8;color:#046d4b} .v-good{background:#fff3c4;color:#8a6d00} .v-low{background:#ffe1e8;color:#b3003c}
+
+  footer{text-align:center;color:var(--muted);font-size:.85rem;margin-top:20px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <h1>🚀 Hiring Tracker</h1>
+    <p>One screen for your whole hiring journey — from job posting to job offer.</p>
+    <span class="badge">Sample data · nothing is saved between visits</span>
+  </header>
+
+  <!-- 1. HIRING PIPELINE -->
+  <section id="pipeline">
+    <h2><span class="dot dot-pipe"></span>Hiring Pipeline</h2>
+    <p class="sub">The full journey for each candidate. Move them forward a stage, or record the final decision.</p>
+    <div id="pipeline-list"></div>
+  </section>
+
+  <!-- 2. CANDIDATE SCREENING -->
+  <section id="screening">
+    <h2><span class="dot dot-screen"></span>Candidate Screening</h2>
+    <p class="sub">Review each candidate's details and interview progress. Update statuses right here.</p>
+    <div id="screening-list"></div>
+  </section>
+
+  <!-- 3. MATCH SUMMARY -->
+  <section id="match">
+    <h2><span class="dot dot-match"></span>Match Summary</h2>
+    <p class="sub">How well each candidate fits their desired role — skills and experience at a glance.</p>
+    <div id="match-list"></div>
+  </section>
+
+  <footer>Hiring Tracker · demo with sample candidates from Malaysia · all data resets on refresh</footer>
+</div>
+
+<script>
+const STAGES = ["Applied","Screening","Interview","Assessment","Offer"];
+
+const candidates = [
+  { id:1, name:"Nurul Aisyah binti Rahman", role:"Senior Frontend Developer", stage:2,
+    screening:"Passed", interview:"In Progress",
+    note:"Strong Vue.js portfolio; awaiting second-round interview with the KL product team.",
+    skills:88, experience:74 },
+  { id:2, name:"Tan Wei Ming", role:"Digital Marketing Executive", stage:1,
+    screening:"Pending", interview:"Scheduled",
+    note:"Graduate from UTAR with agency internship experience; phone screen booked for Friday.",
+    skills:72, experience:55 },
+  { id:3, name:"Arvind Raj a/l Selvam", role: "Data Analyst", stage:3,
+    screening:"Passed", interview:"Completed",
+    note:"Great SQL and Power BI assessment results; panel is comparing against one other finalist.",
+    skills:81, experience:66 },
+];
+
+const decisionOf = {};
+function pct(c){ return Math.round((c.skills + c.experience)/2); }
+function decisionLabel(id){
+  const d = decisionOf[id];
+  return d ? `<span class="decided ${d}">${d.charAt(0).toUpperCase()+d.slice(1)}</span>` : "";
+}
+
+function renderPipeline(){
+  document.getElementById("pipeline-list").innerHTML = candidates.map(c=>{
+    const stages = STAGES.map((s,i)=>{
+      const cls = i < c.stage ? "done" : (i === c.stage ? "now" : "");
+      return `<div class="stage ${cls}">${s}</div>`;
+    }).join("");
+    const atEnd = c.stage >= STAGES.length-1;
+    return `<div class="card">
+      <div class="cand-top">
+        <div>
+          <div class="cand-name">${c.name} ${decisionOf[c.id]?decisionLabel(c.id):""}</div>
+          <div class="role">Desired role: ${c.role}</div>
+        </div>
+        <div class="match-pill">${pct(c)}% match</div>
+      </div>
+      <div class="stages">${stages}</div>
+      <div class="actions">
+        <button class="btn-fwd" onclick="moveForward(${c.id})" ${atEnd?"disabled":""}>
+          ${atEnd ? "At final stage ✓" : "Move forward →"}
+        </button>
+        <select onchange="decide(${c.id}, this.value); this.value=''">
+          <option value="" disabled selected>Decision…</option>
+          <option value="shortlisted">Shortlist</option>
+          <option value="rejected">Reject</option>
+          <option value="offered">Offer</option>
+        </select>
+      </div>
+    </div>`;
+  }).join("");
+}
+
+function renderScreening(){
+  document.getElementById("screening-list").innerHTML = candidates.map(c=>`
+    <div class="card" style="border-left-color:var(--teal)">
+      <div class="cand-top">
+        <div>
+          <div class="cand-name">${c.name} ${decisionLabel(c.id)}</div>
+          <div class="role">Desired role: ${c.role} · Currently at <b>${STAGES[c.stage]}</b> stage</div>
+        </div>
+        <div class="match-pill">${pct(c)}% match</div>
+      </div>
+      <div class="screen-grid">
+        <span class="chip screen-${c.screening.toLowerCase()}">Screening: ${c.screening}</span>
+        <span class="chip int-${c.interview.toLowerCase().replace(" ","")}">Interview: ${c.interview}</span>
+      </div>
+      <div class="note">📝 ${c.note}</div>
+      <div class="actions" style="margin-top:12px">
+        <select onchange="setScreening(${c.id}, this.value)">
+          <option disabled ${c.screening? "selected":""}>Screening…</option>
+          ${["Pending","Passed","Failed"].map(v=>`<option ${c.screening===v?"selected":""}>${v}</option>`).join("")}
+        </select>
+        <select onchange="setInterview(${c.id}, this.value)">
+          <option disabled selected>Interview…</option>
+          ${["Scheduled","In Progress","Completed"].map(v=>`<option ${c.interview===v?"selected":""}>${v}</option>`).join("")}
+        </select>
+      </div>
+    </div>`).join("");
+}
+
+function renderMatch(){
+  document.getElementById("match-list").innerHTML = candidates.map(c=>{
+    const m = pct(c);
+    const v = m >= 80 ? ["Strong fit","v-strong"] : m >= 60 ? ["Good fit","v-good"] : ["Lower fit","v-low"];
+    return `<div class="card" style="border-left-color:var(--violet)">
+      <div class="cand-top">
+        <div>
+          <div class="cand-name">${c.name} ${decisionLabel(c.id)}</div>
+          <div class="role">${c.role}</div>
+        </div>
+        <div class="match-pill">${m}% overall</div>
+      </div>
+      <div class="bar-row">
+        <div class="bar-label"><span>Skills</span><span>${c.skills}%</span></div>
+        <div class="bar skills"><span style="width:${c.skills}%"></span></div>
+      </div>
+      <div class="bar-row">
+        <div class="bar-label"><span>Experience</span><span>${c.experience}%</span></div>
+        <div class="bar exp"><span style="width:${c.experience}%"></span></div>
+      </div>
+      <div class="verdict">Verdict: <strong class="${v[1]}">${v[0]}</strong></div>
+    </div>`;
+  }).join("");
+}
+
+function renderAll(){ renderPipeline(); renderScreening(); renderMatch(); }
+
+function moveForward(id){
+  const c = candidates.find(x=>x.id===id);
+  if(c.stage < STAGES.length-1) c.stage++;
+  renderAll();
+}
+function decide(id, d){ if(d){ decisionOf[id]=d; renderAll(); } }
+function setScreening(id,v){ candidates.find(x=>x.id===id).screening=v; renderAll(); }
+function setInterview(id,v){ candidates.find(x=>x.id===id).interview=v; renderAll(); }
+
+renderAll();
+</script>
+</body>
+</html>
